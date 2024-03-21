@@ -60,28 +60,28 @@ jobs:
       - name: Commit ConfigMaps to processing-agent-automation Repository
         run: |
           REPO='https://github.com/redreveal/argocd-gitops-versions.git'
+          TEMP_DIR=$(mktemp -d)
+          git clone https://${{ secrets.TOKEN }}:x-oauth-basic@${REPO#https://} $TEMP_DIR
+          
           MODIFIED_FILES=${{ steps.get_modified_files.outputs.result }}
           IFS=',' read -ra FILES <<< "$MODIFIED_FILES"
           for FILE_PATH in "${FILES[@]}"; do
             FILE_PATH="${FILE_PATH//'"'/}"  # Remove quotes
             FILE_PATH="${FILE_PATH//']'/}"  # Remove closing bracket
             FILE_PATH="${FILE_PATH//'['/}"  # Remove opening bracket
-            if [[ -n "$FILE_PATH" && -f "$FILE_PATH" ]]; then
-              REGION_DIR=$(dirname $FILE_PATH)
-              CONFIGMAP_FILE=$(basename $FILE_PATH)
-              TEMP_DIR=$(mktemp -d)
-              git clone https://${{ secrets.TOKEN }}:x-oauth-basic@${REPO#https://} $TEMP_DIR
-              mkdir -p ${TEMP_DIR}/${REGION_DIR}
-              cp $FILE_PATH ${TEMP_DIR}/${REGION_DIR}/
-              
-              cd ${TEMP_DIR}
-              git config user.email "rberisha@revealdata.com"
-              git config user.name "Redon Berisha"
-              git add ${REGION_DIR}/${CONFIGMAP_FILE}
-              git commit -m "Update ConfigMap for ${REGION_DIR}"
-              git push https://${{ secrets.TOKEN }}:x-oauth-basic@${REPO#https://}
-            fi
+            
+            CONFIGMAP_PATH="${FILE_PATH%.yml}-configmap.yml"
+            mkdir -p "$TEMP_DIR/$(dirname "$CONFIGMAP_PATH")"
+            cp "$CONFIGMAP_PATH" "$TEMP_DIR/$CONFIGMAP_PATH"
           done
+          
+          cd "$TEMP_DIR"
+          git config user.email "you@example.com"
+          git config user.name "Your GitHub Username"
+          git add .
+          git commit -m "Update ConfigMaps"
+          git push https://${{ secrets.TOKEN }}:x-oauth-basic@${REPO#https://}
+
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         shell: bash
