@@ -72,7 +72,7 @@ jobs:
             
             GENERATED_CONFIGMAP_PATH="$(dirname "$FILE_PATH")/configmap.yml"
             mkdir -p "$TEMP_DIR/$(dirname "$FILE_PATH")"
-            cp "$GENERATED_CONFIGMAP_PATH" "$TEMP_DIR/$FILE_PATH/../configmap.yml"
+            cp "$GENERATED_CONFIGMAP_PATH" "$TEMP_DIR/$FILE_PATH/configmap.yml"
           done
           
           cd "$TEMP_DIR"
