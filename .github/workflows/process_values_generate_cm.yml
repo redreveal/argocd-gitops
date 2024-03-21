@@ -70,16 +70,16 @@ jobs:
               REGION_DIR=$(dirname $FILE_PATH)
               CONFIGMAP_FILE=$(basename $FILE_PATH)
               TEMP_DIR=$(mktemp -d)
-              git clone ${REPO} ${TEMP_DIR}
+              git clone https://${{ secrets.GITHUB_TOKEN }}:x-oauth-basic@${REPO#https://} $TEMP_DIR
               mkdir -p ${TEMP_DIR}/${REGION_DIR}
               cp $FILE_PATH ${TEMP_DIR}/${REGION_DIR}/
               
               cd ${TEMP_DIR}
-              git config user.email "you@example.com"
-              git config user.name "Your Name"
+              git config user.email "rberisha@revealdata.com"
+              git config user.name "Redon Berisha"
               git add ${REGION_DIR}/${CONFIGMAP_FILE}
               git commit -m "Update ConfigMap for ${REGION_DIR}"
-              git push
+              git push https://${{ secrets.GITHUB_TOKEN }}:x-oauth-basic@${REPO#https://}
             fi
           done
         env:
