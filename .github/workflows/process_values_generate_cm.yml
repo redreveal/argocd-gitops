@@ -15,29 +15,27 @@ jobs:
         run: sudo apt-get install -y jq
 
       - name: Find Modified Config Files
-        id: modified_files
+        id: find_modified_files
         run: |
-          if [[ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]]; then
-            # This likely means it's the first push in a newly-created repository, so we list all config files
-            FILES=$(find versions/ -name 'processing-agent-config.yml')
-          else
-            # Use git diff to find changed files in commits
-            FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- 'versions/**/processing-agent-config.yml' || true)
-          fi
-          # Format the output for later steps
-          FILES_JSON=$(jq -n --arg files "$FILES" '{"files":$files | split("\n")}')
-          echo "::set-output name=files::$FILES_JSON"
+          # Find files modified in the last commit
+          MODIFIED_FILES=$(git diff --name-only ${{ github.sha }}^ ${{ github.sha }} | grep 'versions/.*/processing-agent-config.yml' || echo "")
+          echo "Modified files: $MODIFIED_FILES"
+          # Prepare the list of modified files for the next step
+          echo "::set-output name=modified_files::$(echo $MODIFIED_FILES)"
 
       - name: Process Each Modified Config File
+        if: steps.find_modified_files.outputs.modified_files != ''
         run: |
-          FILES=$(echo '${{ steps.modified_files.outputs.files }}' | jq -r '.files[]')
-          for FILE in $FILES; do
-            if [[ -n "$FILE" ]]; then
-              python3 ./scripts/process_values_to_cm.py "$FILE"
+          echo "Processing modified config files..."
+          IFS=$'\n' read -rd '' -a modified_files <<<"${{ steps.find_modified_files.outputs.modified_files }}"
+          for file in "${modified_files[@]}"; do
+            if [[ -n "$file" && -f "$file" ]]; then
+              echo "Processing $file..."
+              python3 ./scripts/process_values_to_cm.py "$file"
+            else
+              echo "No file to process or file does not exist."
             fi
           done
-        env:
-          FILES: ${{ steps.modified_files.outputs.files }}
 
       - name: Commit ConfigMaps to processing-agent-automation Repository
         run: |
