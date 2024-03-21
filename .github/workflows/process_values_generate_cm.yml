@@ -17,7 +17,18 @@ jobs:
       - name: Find Modified Config Files
         id: find_modified_files
         run: |
-          MODIFIED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- 'versions/**/processing-agent-config.yml' || echo "")
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            # For push events, compare the current commit with its parent
+            MODIFIED_FILES=$(git diff --name-only ${{ github.sha }}^ ${{ github.sha }} -- 'versions/**/processing-agent-config.yml' || echo "")
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # For pull requests, compare the PR's head commit with the base branch
+            MODIFIED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} -- 'versions/**/processing-agent-config.yml' || echo "")
+          else
+            echo "Unsupported event type: ${{ github.event_name }}"
+            echo "modified_files=none" >> $GITHUB_ENV
+            exit 0
+          fi
+          
           if [ -z "$MODIFIED_FILES" ]; then
             echo "No modified config files found."
             echo "modified_files=none" >> $GITHUB_ENV
@@ -32,7 +43,6 @@ jobs:
       - name: Process Each Modified Config File
         if: env.modified_files != 'none'
         run: |
-          # Convert the comma-separated list back to an array
           IFS=',' read -r -a modified_files <<< "$MODIFIED_FILES"
           for file in "${modified_files[@]}"; do
             if [[ -n "$file" && -f "$file" ]]; then
