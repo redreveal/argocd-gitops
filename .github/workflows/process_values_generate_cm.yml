@@ -70,7 +70,7 @@ jobs:
               REGION_DIR=$(dirname $FILE_PATH)
               CONFIGMAP_FILE=$(basename $FILE_PATH)
               TEMP_DIR=$(mktemp -d)
-              git clone https://${{ secrets.GITHUB_TOKEN }}:x-oauth-basic@${REPO#https://} $TEMP_DIR
+              git clone https://${{ secrets.TOKEN }}:x-oauth-basic@${REPO#https://} $TEMP_DIR
               mkdir -p ${TEMP_DIR}/${REGION_DIR}
               cp $FILE_PATH ${TEMP_DIR}/${REGION_DIR}/
               
@@ -79,9 +79,9 @@ jobs:
               git config user.name "Redon Berisha"
               git add ${REGION_DIR}/${CONFIGMAP_FILE}
               git commit -m "Update ConfigMap for ${REGION_DIR}"
-              git push https://${{ secrets.GITHUB_TOKEN }}:x-oauth-basic@${REPO#https://}
+              git push https://${{ secrets.TOKEN }}:x-oauth-basic@${REPO#https://}
             fi
           done
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
         shell: bash
