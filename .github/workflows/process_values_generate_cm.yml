@@ -72,7 +72,7 @@ jobs:
             
             DEST_DIR="$TEMP_DIR/$(dirname "$FILE_PATH")"
             mkdir -p "$DEST_DIR"
-            cp "$(dirname "$FILE_PATH")/configmap.yml" "$DEST_DIR"
+            cp "$(dirname "$FILE_PATH")/configmap.yaml" "$DEST_DIR"
           done
           
           cd "$TEMP_DIR"
