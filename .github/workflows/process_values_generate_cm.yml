@@ -16,7 +16,7 @@ jobs:
         run: |
           FILES=$(git diff --name-only ${{ github.sha }}^ ${{ github.sha }} | grep 'versions/.*/processing-agent-config.yml')
           for FILE in $FILES; do
-            python3 scripts/process_values_to_cm.py $FILE
+            python3 ./scripts/process_values_to_cm.py $FILE
           done
 
       - name: Commit ConfigMaps to processing-agent-automation Repository
