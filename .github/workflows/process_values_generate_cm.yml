@@ -19,8 +19,8 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            const { payload, github } = context;
-            const { owner, repo } = context.repo;
+            const payload = context.payload;
+            const repo = context.repo;
             let base, head;
             
             if (payload.pull_request) {
@@ -32,15 +32,14 @@ jobs:
             }
             
             const compare = await github.rest.repos.compareCommits({
-              owner,
-              repo,
-              base,
-              head
+              owner: repo.owner,
+              repo: repo.repo,
+              base: base,
+              head: head
             });
             
-            const modifiedFiles = compare.data.files.filter(file => file.status === 'modified' || file.status === 'added')
-              .map(file => file.filename)
-              .filter(name => name.startsWith('versions/') && name.endsWith('processing-agent-config.yml'));
+            const modifiedFiles = compare.data.files.filter(file => (file.status === 'modified' || file.status === 'added') && file.filename.startsWith('versions/') && file.filename.endsWith('processing-agent-config.yml'))
+              .map(file => file.filename);
             
             return modifiedFiles;
 
