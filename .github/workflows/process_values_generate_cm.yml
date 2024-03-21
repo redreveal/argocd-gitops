@@ -70,9 +70,9 @@ jobs:
             FILE_PATH="${FILE_PATH//']'/}"  # Remove closing bracket
             FILE_PATH="${FILE_PATH//'['/}"  # Remove opening bracket
             
-            CONFIGMAP_PATH="${FILE_PATH%.yml}-configmap.yml"
-            mkdir -p "$TEMP_DIR/$(dirname "$CONFIGMAP_PATH")"
-            cp "$CONFIGMAP_PATH" "$TEMP_DIR/$CONFIGMAP_PATH"
+            GENERATED_CONFIGMAP_PATH="$(dirname "$FILE_PATH")/configmap.yml"
+            mkdir -p "$TEMP_DIR/$(dirname "$FILE_PATH")"
+            cp "$GENERATED_CONFIGMAP_PATH" "$TEMP_DIR/$FILE_PATH/../configmap.yml"
           done
           
           cd "$TEMP_DIR"
