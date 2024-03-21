@@ -17,23 +17,29 @@ jobs:
       - name: Find Modified Config Files
         id: find_modified_files
         run: |
-          # Find files modified in the last commit
-          MODIFIED_FILES=$(git diff --name-only ${{ github.sha }}^ ${{ github.sha }} | grep 'versions/.*/processing-agent-config.yml' || echo "")
-          echo "Modified files: $MODIFIED_FILES"
-          # Prepare the list of modified files for the next step
-          echo "::set-output name=modified_files::$(echo $MODIFIED_FILES)"
+          MODIFIED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- 'versions/**/processing-agent-config.yml' || echo "")
+          if [ -z "$MODIFIED_FILES" ]; then
+            echo "No modified config files found."
+            echo "modified_files=none" >> $GITHUB_ENV
+          else
+            echo "Modified files found:"
+            echo $MODIFIED_FILES
+            # Replacing newlines with commas for easier parsing in later steps
+            MODIFIED_FILES=$(echo $MODIFIED_FILES | tr '\n' ',')
+            echo "modified_files=$MODIFIED_FILES" >> $GITHUB_ENV
+          fi
 
       - name: Process Each Modified Config File
-        if: steps.find_modified_files.outputs.modified_files != ''
+        if: env.modified_files != 'none'
         run: |
-          echo "Processing modified config files..."
-          IFS=$'\n' read -rd '' -a modified_files <<<"${{ steps.find_modified_files.outputs.modified_files }}"
+          # Convert the comma-separated list back to an array
+          IFS=',' read -r -a modified_files <<< "$MODIFIED_FILES"
           for file in "${modified_files[@]}"; do
             if [[ -n "$file" && -f "$file" ]]; then
               echo "Processing $file..."
               python3 ./scripts/process_values_to_cm.py "$file"
             else
-              echo "No file to process or file does not exist."
+              echo "File does not exist: $file"
             fi
           done
 
