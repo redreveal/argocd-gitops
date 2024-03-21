@@ -49,9 +49,9 @@ jobs:
           MODIFIED_FILES=${{ steps.get_modified_files.outputs.result }}
           IFS=',' read -ra FILES <<< "$MODIFIED_FILES"
           for FILE in "${FILES[@]}"; do
-            FILE="${FILE//'"'/}"  # Remove quotes
+            FILE="${FILE//'"'/}"
             FILE="${FILE//']'/}"  # Remove closing bracket
-            FILE="${FILE//'['/}"  # Remove opening bracket
+            FILE="${FILE//'['/}"
             echo "Processing $FILE"
             python3 ./scripts/process_values_to_cm.py "$FILE"
           done
@@ -66,9 +66,9 @@ jobs:
           MODIFIED_FILES=${{ steps.get_modified_files.outputs.result }}
           IFS=',' read -ra FILES <<< "$MODIFIED_FILES"
           for FILE_PATH in "${FILES[@]}"; do
-            FILE_PATH="${FILE_PATH//'"'/}"  # Remove quotes
-            FILE_PATH="${FILE_PATH//']'/}"  # Remove closing bracket
-            FILE_PATH="${FILE_PATH//'['/}"  # Remove opening bracket
+            FILE_PATH="${FILE_PATH//'"'/}"
+            FILE_PATH="${FILE_PATH//']'/}"
+            FILE_PATH="${FILE_PATH//'['/}"
             
             DEST_DIR="$TEMP_DIR/$(dirname "$FILE_PATH")"
             mkdir -p "$DEST_DIR"
