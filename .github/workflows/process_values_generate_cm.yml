@@ -1,0 +1,40 @@
+name: Process Values and Generate ConfigMap
+
+on:
+  push:
+    paths:
+      - 'versions/**/processing-agent-config.yml'
+
+jobs:
+  generate-configmap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Process Changed Config Files and Create ConfigMaps
+        run: |
+          FILES=$(git diff --name-only ${{ github.sha }}^ ${{ github.sha }} | grep 'versions/.*/processing-agent-config.yml')
+          for FILE in $FILES; do
+            python process_values_to_cm.py $FILE
+          done
+
+      - name: Commit ConfigMaps to processing-agent-automation Repository
+        run: |
+          REPO='https://github.com/redreveal/argocd-gitops-versions.git'
+          CHANGED_FILES=$(git diff --name-only ${{ github.sha }}^ ${{ github.sha }} | grep 'versions/.*/processing-agent-config.yml')
+          for FILE in $CHANGED_FILES; do
+            REGION_DIR=$(dirname $FILE)
+            CONFIGMAP_FILE=$(basename $FILE)
+            TEMP_DIR=$(mktemp -d)
+            git clone ${REPO} ${TEMP_DIR}
+            mkdir -p ${TEMP_DIR}/${REGION_DIR}
+            cp $FILE ${TEMP_DIR}/${REGION_DIR}/
+            
+            cd ${TEMP_DIR}
+            git add ${REGION_DIR}/${CONFIGMAP_FILE}
+            git commit -m "Update ConfigMap for ${REGION_DIR}"
+            git push
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

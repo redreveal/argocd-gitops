@@ -1,0 +1,6 @@
+default_manager_version: "10.1.2024.1"
+default_agent_version: "11.0.0.0"
+msa_version_overrides:
+  "21010001": "11.0.0.1"
+  "21010002": "12.0.0.1"
+  "21010003": "11.1.2.4"
