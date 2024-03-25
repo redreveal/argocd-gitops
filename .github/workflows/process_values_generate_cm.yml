@@ -6,11 +6,12 @@ on:
       - 'versions/**/processing-agent-config.yml'
 
 jobs:
-  generate-configmap:
+  process-and-update-config:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
+
       - name: Install Dependencies
         run: sudo apt-get install -y jq
 
@@ -43,45 +44,39 @@ jobs:
             
             return modifiedFiles;
 
-      - name: Process Each Modified Config File
+      - name: Clone processing-agent-automation Repository
+        if: steps.get_modified_files.outputs.result != '[]'
+        run: |
+          git clone https://${{ secrets.TOKEN }}:x-oauth-basic@github.com/redreveal/argocd-gitops-versions.git ${{ github.workspace }}/argocd-gitops-versions
+
+      - name: Process Each Modified Config File and Update Values.yaml
         if: steps.get_modified_files.outputs.result != '[]'
         run: |
           MODIFIED_FILES=${{ steps.get_modified_files.outputs.result }}
           IFS=',' read -ra FILES <<< "$MODIFIED_FILES"
           for FILE in "${FILES[@]}"; do
-            FILE="${FILE//'"'/}"
+            FILE="${FILE//'"'/}"  # Trim quotes
             FILE="${FILE//']'/}"  # Remove closing bracket
-            FILE="${FILE//'['/}"
+            FILE="${FILE//'['/}"  # Remove opening bracket
             echo "Processing $FILE"
-            python3 ./scripts/process_values_to_cm.py "$FILE"
+            # Construct the relative path for the corresponding values.yaml
+            RELATIVE_PATH="${FILE#versions/}"  # Strip the 'versions/' prefix
+            RELATIVE_DIR=$(dirname "$RELATIVE_PATH")  # Get the directory path
+            VALUES_FILE_PATH="${{ github.workspace }}/argocd-gitops-versions/$RELATIVE_DIR/values.yaml"
+            echo "Updating values.yaml at: $VALUES_FILE_PATH"
+            python3 ./scripts/process_values_to_cm.py "$FILE" "$VALUES_FILE_PATH"
           done
         shell: bash
 
-      - name: Commit ConfigMaps to processing-agent-automation Repository
+      - name: Commit and Push Updates to processing-agent-automation Repository
+        if: steps.get_modified_files.outputs.result != '[]'
         run: |
-          REPO='https://github.com/redreveal/argocd-gitops-versions.git'
-          TEMP_DIR=$(mktemp -d)
-          git clone https://${{ secrets.TOKEN }}:x-oauth-basic@${REPO#https://} $TEMP_DIR
-          
-          MODIFIED_FILES=${{ steps.get_modified_files.outputs.result }}
-          IFS=',' read -ra FILES <<< "$MODIFIED_FILES"
-          for FILE_PATH in "${FILES[@]}"; do
-            FILE_PATH="${FILE_PATH//'"'/}"
-            FILE_PATH="${FILE_PATH//']'/}"
-            FILE_PATH="${FILE_PATH//'['/}"
-            
-            DEST_DIR="$TEMP_DIR/$(dirname "$FILE_PATH")"
-            mkdir -p "$DEST_DIR"
-            cp "$(dirname "$FILE_PATH")/configmap.yaml" "$DEST_DIR"
-          done
-          
-          cd "$TEMP_DIR"
-          git config user.email "you@example.com"
-          git config user.name "Your GitHub Username"
+          cd ${{ github.workspace }}/argocd-gitops-versions
+          git config user.email "rberisha@revealdata.com"
+          git config user.name "Redon Berisha"
           git add .
-          git commit -m "Update ConfigMaps"
-          git push https://${{ secrets.TOKEN }}:x-oauth-basic@${REPO#https://}
-
+          git commit -m "Update ConfigMaps and values.yaml"
+          git push
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         shell: bash
