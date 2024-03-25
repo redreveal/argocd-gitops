@@ -1,8 +1,6 @@
 import yaml
 import sys
 import os
-import boto3
-
 
 def load_values_file(values_file_path):
     with open(values_file_path, 'r') as file:
