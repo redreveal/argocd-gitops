@@ -62,7 +62,7 @@ jobs:
             # Construct the relative path for the corresponding values.yaml
             RELATIVE_PATH="${FILE#versions/}"  # Strip the 'versions/' prefix
             RELATIVE_DIR=$(dirname "$RELATIVE_PATH")  # Get the directory path
-            VALUES_FILE_PATH="${{ github.workspace }}/argocd-gitops-versions/$RELATIVE_DIR/values.yaml"
+            VALUES_FILE_PATH="${{ github.workspace }}/argocd-gitops-versions/versions/$RELATIVE_DIR/values.yaml"
             echo "Updating values.yaml at: $VALUES_FILE_PATH"
             python3 ./scripts/process_values_to_cm.py "$FILE" "$VALUES_FILE_PATH"
           done
