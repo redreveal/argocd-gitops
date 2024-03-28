@@ -6,8 +6,32 @@ on:
       - 'versions/**/processing-agent-config.yml'
 
 jobs:
-  process-and-update-config:
+  determine-environment:
     runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set Environment Output
+        id: set-env
+        run: |
+          if echo "${{ github.event.head_commit.modified }}" | grep -q "versions/prod"; then
+            echo "::set-output name=environment::production"
+          elif echo "${{ github.event.head_commit.modified }}" | grep -q "versions/uat"; then
+            echo "::set-output name=environment::uat"
+          elif echo "${{ github.event.head_commit.modified }}" | grep -q "versions/dev"; then
+            echo "::set-output name=environment::dev"
+          else
+            echo "::set-output name=environment::unknown"
+          fi
+
+  process-and-update-config:
+    needs: determine-environment
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ needs.determine-environment.outputs.environment }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
