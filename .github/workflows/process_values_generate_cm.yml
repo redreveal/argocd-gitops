@@ -9,40 +9,30 @@ jobs:
   determine-environment:
     runs-on: ubuntu-latest
     outputs:
-      environment: ${{ steps.filter-files.outputs.environment }}
+      environment: ${{ steps.set-env.outputs.environment }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Filter modified files and set environment
-        id: filter-files
+      - name: Determine Environment Based on Modified Files
+        id: set-env
         uses: actions/github-script@v5
         with:
           script: |
-            const payload = context.payload;
-            let modifiedFiles = [];
+            const patternProd = new RegExp('versions/prod.*/processing-agent-config\\.yml');
+            const patternUat = new RegExp('versions/uat.*/processing-agent-config\\.yml');
+            const patternDev = new RegExp('versions/dev.*/processing-agent-config\\.yml');
             
-            if (payload.commits) {
-              payload.commits.forEach(commit => {
-                if (commit.modified) {
-                  modifiedFiles.push(...commit.modified);
-                }
-                if (commit.added) {
-                  modifiedFiles.push(...commit.added);
-                }
-              });
-            }
+            const files = context.payload.commits
+              .flatMap(commit => [...commit.added, ...commit.modified])
+              .filter(file => patternProd.test(file) || patternUat.test(file) || patternDev.test(file));
             
-            const prodRegex = /^versions\/prod.*\/processing-agent-config\.yml$/;
-            const uatRegex = /^versions\/uat.*\/processing-agent-config\.yml$/;
-            const devRegex = /^versions\/dev.*\/processing-agent-config\.yml$/;
-
             let environment = 'unknown';
-            if (modifiedFiles.some(file => prodRegex.test(file))) {
+            if (files.some(file => patternProd.test(file))) {
               environment = 'production';
-            } else if (modifiedFiles.some(file => uatRegex.test(file))) {
+            } else if (files.some(file => patternUat.test(file))) {
               environment = 'uat';
-            } else if (modifiedFiles.some(file => devRegex.test(file))) {
+            } else if (files.some(file => patternDev.test(file))) {
               environment = 'dev';
             }
 
