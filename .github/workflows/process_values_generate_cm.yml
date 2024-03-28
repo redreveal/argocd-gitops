@@ -9,33 +9,50 @@ jobs:
   determine-environment:
     runs-on: ubuntu-latest
     outputs:
-      environment: ${{ steps.set-env.outputs.environment }}
+      environment: ${{ steps.determine-env.outputs.environment }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
       - name: Determine Environment Based on Modified Files
-        id: set-env
+        id: determine-env
         uses: actions/github-script@v5
         with:
           script: |
-            const patternProd = new RegExp('versions/prod.*/processing-agent-config\\.yml');
-            const patternUat = new RegExp('versions/uat.*/processing-agent-config\\.yml');
-            const patternDev = new RegExp('versions/dev.*/processing-agent-config\\.yml');
+            const payload = context.payload;
+            const repo = context.repo;
+            let base, head;
             
-            const files = context.payload.commits
-              .flatMap(commit => [...commit.added, ...commit.modified])
-              .filter(file => patternProd.test(file) || patternUat.test(file) || patternDev.test(file));
+            if (payload.pull_request) {
+              base = payload.pull_request.base.sha;
+              head = payload.pull_request.head.sha;
+            } else {
+              base = payload.before;
+              head = payload.after;
+            }
+            
+            const compare = await github.rest.repos.compareCommits({
+              owner: repo.owner,
+              repo: repo.repo,
+              base: base,
+              head: head
+            });
             
             let environment = 'unknown';
-            if (files.some(file => patternProd.test(file))) {
-              environment = 'production';
-            } else if (files.some(file => patternUat.test(file))) {
-              environment = 'uat';
-            } else if (files.some(file => patternDev.test(file))) {
-              environment = 'dev';
-            }
+            const patternProd = new RegExp('^versions/prod.*/processing-agent-config\\.yml$');
+            const patternUat = new RegExp('^versions/uat.*/processing-agent-config\\.yml$');
+            const patternDev = new RegExp('^versions/dev.*/processing-agent-config\\.yml$');
 
+            compare.data.files.forEach(file => {
+              if (patternProd.test(file.filename)) {
+                environment = 'production';
+              } else if (patternUat.test(file.filename)) {
+                environment = 'uat';
+              } else if (patternDev.test(file.filename)) {
+                environment = 'dev';
+              }
+            });
+            
             core.setOutput('environment', environment);
 
   process-and-update-config:
