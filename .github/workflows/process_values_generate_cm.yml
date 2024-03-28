@@ -9,23 +9,44 @@ jobs:
   determine-environment:
     runs-on: ubuntu-latest
     outputs:
-      environment: ${{ steps.set-env.outputs.environment }}
+      environment: ${{ steps.filter-files.outputs.environment }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Set Environment Output
-        id: set-env
-        run: |
-          if echo "${{ github.event.head_commit.modified }}" | grep -q "versions/prod"; then
-            echo "::set-output name=environment::production"
-          elif echo "${{ github.event.head_commit.modified }}" | grep -q "versions/uat"; then
-            echo "::set-output name=environment::uat"
-          elif echo "${{ github.event.head_commit.modified }}" | grep -q "versions/dev"; then
-            echo "::set-output name=environment::dev"
-          else
-            echo "::set-output name=environment::unknown"
-          fi
+      - name: Filter modified files and set environment
+        id: filter-files
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const payload = context.payload;
+            let modifiedFiles = [];
+            
+            if (payload.commits) {
+              payload.commits.forEach(commit => {
+                if (commit.modified) {
+                  modifiedFiles.push(...commit.modified);
+                }
+                if (commit.added) {
+                  modifiedFiles.push(...commit.added);
+                }
+              });
+            }
+            
+            const prodRegex = /^versions\/prod.*\/processing-agent-config\.yml$/;
+            const uatRegex = /^versions\/uat.*\/processing-agent-config\.yml$/;
+            const devRegex = /^versions\/dev.*\/processing-agent-config\.yml$/;
+
+            let environment = 'unknown';
+            if (modifiedFiles.some(file => prodRegex.test(file))) {
+              environment = 'production';
+            } else if (modifiedFiles.some(file => uatRegex.test(file))) {
+              environment = 'uat';
+            } else if (modifiedFiles.some(file => devRegex.test(file))) {
+              environment = 'dev';
+            }
+
+            core.setOutput('environment', environment);
 
   process-and-update-config:
     needs: determine-environment
