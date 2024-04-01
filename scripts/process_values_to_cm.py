@@ -18,8 +18,6 @@ def update_values_with_config(values, config):
     values['configMap']['config_values'] = config
     return values
 
-
-
 def process_config_file(config_file_path, values_file_path):
     with open(config_file_path, 'r') as file:
         new_config = yaml.safe_load(file)
