@@ -92,7 +92,7 @@ jobs:
               head: head
             });
             
-            const modifiedFiles = compare.data.files.filter(file => (file.status === 'modified' || file.status === 'added') && file.filename.startsWith('versions/') && file.filename.endsWith('processing-agent-config.yml'))
+            const modifiedFiles = compare.data.files.filter(file => (file.status === 'modified' || file.status === 'added') && file.filename.startsWith('versions/prod') && file.filename.endsWith('processing-agent-config.yml'))
               .map(file => file.filename);
             
             return modifiedFiles;
@@ -169,7 +169,7 @@ jobs:
               head: head
             });
             
-            const modifiedFiles = compare.data.files.filter(file => (file.status === 'modified' || file.status === 'added') && file.filename.startsWith('versions/') && file.filename.endsWith('processing-agent-config.yml'))
+            const modifiedFiles = compare.data.files.filter(file => (file.status === 'modified' || file.status === 'added') && (file.filename.startsWith('versions/dev/') || file.filename.startsWith('versions/uat/')) && file.filename.endsWith('processing-agent-config.yml'))
               .map(file => file.filename);
             
             return modifiedFiles;
