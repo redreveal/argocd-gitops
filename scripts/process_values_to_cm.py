@@ -13,15 +13,34 @@ def save_values_file(values, values_file_path):
 
 
 def update_values_with_config(values, config):
-    # we will be checking that configMap exists and also the config_values
     if 'configMap' not in values:
         values['configMap'] = {}
-    values['configMap']['config_values'] = config
+    if 'config_values' not in values['configMap']:
+        values['configMap']['config_values'] = {}
+
+    config_values = values['configMap']['config_values']
+    config_values['defaultManagerVersion'] = config.get('defaultManagerVersion')
+    config_values['defaultAgentVersion'] = config.get('defaultAgentVersion')
+
+    msa_overrides = config_values.get('msaVersionOverrides', {})
+    for msa, overrides in config.get('msaVersionOverrides', {}).items():
+        msa_override = {}
+
+        msa_override['agentVersion'] = overrides.get('agentVersion', config.get('defaultAgentVersion'))
+
+        if 'managerVersion' in overrides:
+            msa_override['managerVersion'] = overrides.get('managerVersion')
+        else:
+            msa_override['managerVersion'] = config.get('defaultManagerVersion')
+
+        msa_overrides[msa] = msa_override
+
+    config_values['msaVersionOverrides'] = msa_overrides
+
     return values
 
 
 def process_config_file(config_file_path, values_file_path):
-    # Load the processing-agent-config.yml as the new config
     with open(config_file_path, 'r') as file:
         new_config = yaml.safe_load(file)
 
