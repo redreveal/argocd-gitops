@@ -11,9 +11,14 @@ jobs:
     outputs:
       prod_changed: ${{ steps.determine-env.outputs.prod_changed }}
       dev_uat_changed: ${{ steps.determine-env.outputs.dev_uat_changed }}
+      commit_message: ${{ steps.commit-message.outputs.commit_message }} # Output the commit message
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
+
+      - name: Get Commit Message
+        id: commit-message
+        run: echo "::set-output name=commit_message::$(git log -1 --pretty=%B)"
 
       - name: Determine Environment Based on Modified Files
         id: determine-env
@@ -54,7 +59,6 @@ jobs:
             
             core.setOutput('prod_changed', prod_changed);
             core.setOutput('dev_uat_changed', dev_uat_changed);
-
 
   process-values-production:
     needs: determine-environment
@@ -128,7 +132,7 @@ jobs:
           git config user.email "rberisha@revealdata.com"
           git config user.name "Redon Berisha"
           git add .
-          git commit -m "Update ConfigMaps and values.yaml"
+          git commit -m "${{ needs.determine-environment.outputs.commit_message }}"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
@@ -153,7 +157,7 @@ jobs:
             const payload = context.payload;
             const repo = context.repo;
             let base, head;
-            
+
             if (payload.pull_request) {
               base = payload.pull_request.base.sha;
               head = payload.pull_request.head.sha;
@@ -161,17 +165,17 @@ jobs:
               base = payload.before;
               head = payload.after;
             }
-            
+
             const compare = await github.rest.repos.compareCommits({
               owner: repo.owner,
               repo: repo.repo,
               base: base,
               head: head
             });
-            
+
             const modifiedFiles = compare.data.files.filter(file => (file.status === 'modified' || file.status === 'added') && (file.filename.startsWith('versions/dev/') || file.filename.startsWith('versions/uat/')) && file.filename.endsWith('processing-agent-config.yml'))
               .map(file => file.filename);
-            
+
             return modifiedFiles;
 
       - name: Clone processing-agent-automation Repository
@@ -205,7 +209,7 @@ jobs:
           git config user.email "rberisha@revealdata.com"
           git config user.name "Redon Berisha"
           git add .
-          git commit -m "Update ConfigMaps and values.yaml"
+          git commit -m "${{ needs.determine-environment.outputs.commit_message }}"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
