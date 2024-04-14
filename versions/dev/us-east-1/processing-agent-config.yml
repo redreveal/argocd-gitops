@@ -1,7 +1,7 @@
 defaultManagerVersion: "10.1.2024.1"
 defaultAgentVersion: "11.0.0.040"
 msaVersionOverrides:
-   "92512064": "11.0.0.010"
+   "92512064": "11.0.0.005"
    "92510001":
       agentVersion: "2024.3.0.429"
       managerVersion: "10.2.2025.2"
