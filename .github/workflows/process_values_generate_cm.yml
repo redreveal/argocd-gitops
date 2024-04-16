@@ -69,6 +69,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ARGOCD_GITOPS_VERSIONS_DEPLOYMENT_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
       - name: Install Dependencies
         run: sudo apt-get install -y jq
 
@@ -101,10 +108,10 @@ jobs:
             
             return modifiedFiles;
 
-      - name: Clone processing-agent-automation Repository
+      - name: Clone processing-agent-automation Repository using SSH
         if: steps.get_modified_files.outputs.result != '[]'
         run: |
-          git clone https://${{ secrets.TOKEN }}:x-oauth-basic@github.com/redreveal/argocd-gitops-versions.git ${{ github.workspace }}/argocd-gitops-versions
+          git clone git@github.com/redreveal/argocd-gitops-versions.git ${{ github.workspace }}/argocd-gitops-versions
 
       - name: Process Each Modified Config File and Update Values.yaml
         if: steps.get_modified_files.outputs.result != '[]'
@@ -135,7 +142,7 @@ jobs:
           git commit -m "${{ needs.determine-environment.outputs.commit_message }}"
           git push
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          GIT_SSH_COMMAND: "ssh -i ~/.ssh/id_rsa"
         shell: bash
 
   process-values-dev-uat:
@@ -145,6 +152,13 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ARGOCD_GITOPS_VERSIONS_DEPLOYMENT_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
 
       - name: Install Dependencies
         run: sudo apt-get install -y jq
@@ -178,10 +192,10 @@ jobs:
 
             return modifiedFiles;
 
-      - name: Clone processing-agent-automation Repository
+      - name: Clone processing-agent-automation Repository using SSH
         if: steps.get_modified_files.outputs.result != '[]'
         run: |
-          git clone https://${{ secrets.TOKEN }}:x-oauth-basic@github.com/redreveal/argocd-gitops-versions.git ${{ github.workspace }}/argocd-gitops-versions
+          git clone git@github.com/redreveal/argocd-gitops-versions.git ${{ github.workspace }}/argocd-gitops-versions
 
       - name: Process Each Modified Config File and Update Values.yaml
         if: steps.get_modified_files.outputs.result != '[]'
@@ -212,5 +226,5 @@ jobs:
           git commit -m "${{ needs.determine-environment.outputs.commit_message }}"
           git push
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          GIT_SSH_COMMAND: "ssh -i ~/.ssh/id_rsa"
         shell: bash
