@@ -131,7 +131,7 @@ jobs:
             if [ ! -f "$VALUES_FILE_PATH" ]; then
               echo "values.yaml does not exist at $VALUES_FILE_PATH, creating file."
               mkdir -p $(dirname "$VALUES_FILE_PATH") # Ensure directory exists
-              touch "$VALUES_FILE_PATH"
+              echo "configMap: {}" > "$VALUES_FILE_PATH"
             fi
           
             echo "Updating values.yaml at: $VALUES_FILE_PATH"
@@ -222,7 +222,7 @@ jobs:
             if [ ! -f "$VALUES_FILE_PATH" ]; then
               echo "values.yaml does not exist at $VALUES_FILE_PATH, creating file."
               mkdir -p $(dirname "$VALUES_FILE_PATH") # Ensure directory exists
-              touch "$VALUES_FILE_PATH"
+              echo "configMap: {}" > "$VALUES_FILE_PATH"
             fi
           
             echo "Updating values.yaml at: $VALUES_FILE_PATH"
