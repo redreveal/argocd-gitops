@@ -42,7 +42,7 @@ jobs:
             # Ensure the target file directory exists
             mkdir -p $(dirname "$trg_path")
             # Convert source YAML to ConfigMap format and compare with target
-            python3 ./.github/actions/scripts/process_values_generate_cm.py "$src_path" "$trg_path"
+            python3 ./.github/actions/scripts/process_values_to_cm.py "$src_path" "$trg_path"
             if [ $? -eq 0 ]; then
               echo "$file has changes and needs to be updated."
               cp "$src_path" "$trg_path"
