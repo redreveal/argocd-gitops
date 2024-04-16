@@ -27,7 +27,7 @@ jobs:
       - name: Checkout target repository using SSH
         uses: actions/checkout@v2
         with:
-          repository: 'git@github.com:redreveal/argocd-gitops-versions.git'
+          repository: 'redreveal/argocd-gitops-versions'  # Correct repository specification
           ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
           path: target-repo
           ref: ${{ github.event.inputs.target_branch }}
@@ -37,8 +37,8 @@ jobs:
           mkdir changes
           # Assuming the files in the source are standard YAML and need to be converted to ConfigMap format for the target
           for file in $(find versions -name 'processing-agent-config.yml'); do
-            src_path="source-repo/$file"
-            trg_path="target-repo/$file"
+            src_path="$GITHUB_WORKSPACE/$file"
+            trg_path="$GITHUB_WORKSPACE/target-repo/$file"
             # Ensure the target file directory exists
             mkdir -p $(dirname "$trg_path")
             # Convert source YAML to ConfigMap format and compare with target
@@ -51,7 +51,7 @@ jobs:
           done
 
 #      - name: Commit and Push Changes to Target Repository
-#        if: steps.detect_and_process_configuration_changes.outputs.changes_detected == 'true'
+#        if: ${{ steps.detect_and_process_configuration_changes.outputs.changes_detected == 'true' }}
 #        run: |
 #          cd target-repo
 #          git config user.email "sync-bot@example.com"
