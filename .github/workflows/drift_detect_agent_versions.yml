@@ -35,29 +35,32 @@ jobs:
       - name: Detect and Process Configuration Changes
         run: |
           mkdir changes
-          echo "Logging source repo structure..."
-          find "$GITHUB_WORKSPACE/versions" -type f
-          echo "Logging target repo structure..."
-          find "$GITHUB_WORKSPACE/target-repo/versions" -type f
           # Process files
-          for file in $(find versions -name 'processing-agent-config.yml'); do
-            src_path="$GITHUB_WORKSPACE/$file"
-            trg_path="${GITHUB_WORKSPACE}/target-repo/$file"  # Ensure this path points correctly
-            echo "Checking file: $src_path to $trg_path"
+          find versions -name 'processing-agent-config.yml' | while read src_file; do
+            src_path="$GITHUB_WORKSPACE/$src_file"
+            # Change the target file path to use values.yaml instead of processing-agent-config.yml
+            trg_path="${src_path//source-repo/target-repo}"
+            trg_path="${trg_path//processing-agent-config.yml/values.yaml}"
+            
+            echo "Processing source: $src_path"
+            echo "Targeting: $trg_path"
+            
             # Ensure the target file directory exists
             mkdir -p $(dirname "$trg_path")
             if [ ! -f "$trg_path" ]; then
               echo "Target file $trg_path does not exist, creating a placeholder."
               touch "$trg_path"  # Create an empty file or use a default template
             fi
+            
             # Convert source YAML to ConfigMap format and compare with target
             python3 ./.github/actions/scripts/process_values_to_cm.py "$src_path" "$trg_path"
             if [ $? -eq 0 ]; then
               echo "$file has changes and needs to be updated."
               cp "$src_path" "$trg_path"
-              echo "$file" >> changes/list.txt
+              echo "$src_file" >> changes/list.txt
             fi
           done
+
 
 
 #      - name: Commit and Push Changes to Target Repository
