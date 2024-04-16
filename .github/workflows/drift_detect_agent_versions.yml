@@ -40,19 +40,42 @@ jobs:
 
       - name: Compare Configuration Files Using Python Script
         run: |
-          echo "Comparing configuration files..."
           src_dir="$GITHUB_WORKSPACE/versions"
           trg_dir="$GITHUB_WORKSPACE/target-repo/versions"
+          changes_detected=false
 
           # Find all source configuration files and compare them
           find $src_dir -name "processing-agent-config.yml" | while read src_file; do
-            trg_file="${src_file/$src_dir/$trg_dir}"
-            trg_file="${trg_file/processing-agent-config.yml/values.yaml}"
-            
+            relative_path="${src_file#"$src_dir/"}"
+            trg_file="${trg_dir}/${relative_path/processing-agent-config.yml/values.yaml}"
+
             if [[ -f "$trg_file" ]]; then
               # Run the custom Python script to compare configurations
-              python3 ./.github/actions/scripts/drift_detection_configs.py "$src_file" "$trg_file"
+              python3 ./.github/actions/scripts/compare_yaml_configs.py "$src_file" "$trg_file"
+              if [ $? -eq 1 ]; then
+                changes_detected=true
+                echo "Processing $src_file to $trg_file"
+                python3 ./.github/actions/scripts/process_values_to_cm.py "$src_file" "$trg_file"
+              fi
             else
-              echo "Target file $trg_file does not exist."
+              echo "Target file $trg_file does not exist. Creating and processing..."
+              mkdir -p $(dirname "$trg_file")
+              touch "$trg_file"
+              python3 ./.github/actions/scripts/process_values_to_cm.py "$src_file" "$trg_file"
+              changes_detected=true
             fi
           done
+
+          echo "Changes detected: $changes_detected"
+
+      - name: Commit and Push Changes to Target Repository
+        if: ${{ env.changes_detected == 'true' }}
+        run: |
+          cd target-repo
+          git config user.email "rberisha@revealdata.com"
+          git config user.name "Redon Berisha"
+          git add versions/
+          git commit -m "Updated configurations based on changes in drift detection"
+          git push
+        env:
+          GIT_SSH_COMMAND: "ssh -i ~/.ssh/id_rsa"
