@@ -51,7 +51,7 @@ jobs:
 
             if [[ -f "$trg_file" ]]; then
               # Run the custom Python script to compare configurations
-              python3 ./.github/actions/scripts/compare_yaml_configs.py "$src_file" "$trg_file"
+              python3 ./.github/actions/scripts/drift_detection_configs.py "$src_file" "$trg_file"
               if [ $? -eq 1 ]; then
                 changes_detected=true
                 echo "Processing $src_file to $trg_file"
