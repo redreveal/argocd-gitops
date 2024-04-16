@@ -111,7 +111,7 @@ jobs:
       - name: Clone processing-agent-automation Repository using SSH
         if: steps.get_modified_files.outputs.result != '[]'
         run: |
-          git clone git@github.com/redreveal/argocd-gitops-versions.git ${{ github.workspace }}/argocd-gitops-versions
+          git clone git@github.com:redreveal/argocd-gitops-versions.git ${{ github.workspace }}/argocd-gitops-versions
 
       - name: Process Each Modified Config File and Update Values.yaml
         if: steps.get_modified_files.outputs.result != '[]'
@@ -195,7 +195,7 @@ jobs:
       - name: Clone processing-agent-automation Repository using SSH
         if: steps.get_modified_files.outputs.result != '[]'
         run: |
-          git clone git@github.com/redreveal/argocd-gitops-versions.git ${{ github.workspace }}/argocd-gitops-versions
+          git clone git@github.com:redreveal/argocd-gitops-versions.git ${{ github.workspace }}/argocd-gitops-versions
 
       - name: Process Each Modified Config File and Update Values.yaml
         if: steps.get_modified_files.outputs.result != '[]'
