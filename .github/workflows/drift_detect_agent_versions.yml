@@ -1,0 +1,66 @@
+name: Manual Sync Configuration
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Target branch to sync configurations to'
+        required: true
+        default: 'main'
+
+jobs:
+  sync-configurations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Checkout source repository (current repo)
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Ensure we fetch all history for diffs
+
+      - name: Checkout target repository using SSH
+        uses: actions/checkout@v2
+        with:
+          repository: 'git@github.com:redreveal/argocd-gitops-versions.git'
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          path: target-repo
+          ref: ${{ github.event.inputs.target_branch }}
+
+      - name: Detect and Process Configuration Changes
+        run: |
+          mkdir changes
+          # Assuming the files in the source are standard YAML and need to be converted to ConfigMap format for the target
+          for file in $(find versions -name 'processing-agent-config.yml'); do
+            src_path="source-repo/$file"
+            trg_path="target-repo/$file"
+            # Ensure the target file directory exists
+            mkdir -p $(dirname "$trg_path")
+            # Convert source YAML to ConfigMap format and compare with target
+            python3 ./.github/actions/scripts/process_values_generate_cm.py "$src_path" "$trg_path"
+            if [ $? -eq 0 ]; then
+              echo "$file has changes and needs to be updated."
+              cp "$src_path" "$trg_path"
+              echo "$file" >> changes/list.txt
+            fi
+          done
+
+#      - name: Commit and Push Changes to Target Repository
+#        if: steps.detect_and_process_configuration_changes.outputs.changes_detected == 'true'
+#        run: |
+#          cd target-repo
+#          git config user.email "sync-bot@example.com"
+#          git config user.name "Sync Bot"
+#          git add versions/
+#          if [ -f ../changes/list.txt ]; then
+#            git commit -m "Updated configurations based on changes in source repo"
+#            git push
+#          else
+#            echo "No changes to commit."
+#          fi
+#        working_directory: ${{ github.workspace }}
