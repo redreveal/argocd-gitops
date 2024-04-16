@@ -69,7 +69,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Set up SSH key
+      - name: Set up SSH key for remote repo
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.ARGOCD_GITOPS_VERSIONS_DEPLOYMENT_KEY }}" > ~/.ssh/id_rsa
@@ -127,8 +127,15 @@ jobs:
             RELATIVE_PATH="${FILE#versions/}"  # Strip the 'versions/' prefix
             RELATIVE_DIR=$(dirname "$RELATIVE_PATH")  # Get the directory path
             VALUES_FILE_PATH="${{ github.workspace }}/argocd-gitops-versions/versions/$RELATIVE_DIR/values.yaml"
+          
+            if [ ! -f "$VALUES_FILE_PATH" ]; then
+              echo "values.yaml does not exist at $VALUES_FILE_PATH, creating file."
+              mkdir -p $(dirname "$VALUES_FILE_PATH") # Ensure directory exists
+              touch "$VALUES_FILE_PATH"
+            fi
+          
             echo "Updating values.yaml at: $VALUES_FILE_PATH"
-            python3 ./scripts/process_values_to_cm.py "$FILE" "$VALUES_FILE_PATH"
+            python3 ./.github/actions/scripts/process_values_to_cm.py "$FILE" "$VALUES_FILE_PATH"
           done
         shell: bash
 
@@ -153,7 +160,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Set up SSH key
+      - name: Set up SSH key for remote repo
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.ARGOCD_GITOPS_VERSIONS_DEPLOYMENT_KEY }}" > ~/.ssh/id_rsa
@@ -211,8 +218,15 @@ jobs:
             RELATIVE_PATH="${FILE#versions/}"  # Strip the 'versions/' prefix
             RELATIVE_DIR=$(dirname "$RELATIVE_PATH")  # Get the directory path
             VALUES_FILE_PATH="${{ github.workspace }}/argocd-gitops-versions/versions/$RELATIVE_DIR/values.yaml"
+          
+            if [ ! -f "$VALUES_FILE_PATH" ]; then
+              echo "values.yaml does not exist at $VALUES_FILE_PATH, creating file."
+              mkdir -p $(dirname "$VALUES_FILE_PATH") # Ensure directory exists
+              touch "$VALUES_FILE_PATH"
+            fi
+          
             echo "Updating values.yaml at: $VALUES_FILE_PATH"
-            python3 ./scripts/process_values_to_cm.py "$FILE" "$VALUES_FILE_PATH"
+            python3 ./.github/actions/scripts/process_values_to_cm.py "$FILE" "$VALUES_FILE_PATH"
           done
         shell: bash
 
