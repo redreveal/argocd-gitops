@@ -27,7 +27,7 @@ jobs:
       - name: Checkout target repository using SSH
         uses: actions/checkout@v2
         with:
-          repository: 'redreveal/argocd-gitops-versions'  # Correct repository specification
+          repository: 'redreveal/argocd-gitops-versions'
           ssh-key: ${{ secrets.ARGOCD_GITOPS_VERSIONS_DEPLOYMENT_KEY }}
           path: target-repo
           ref: ${{ github.event.inputs.target_branch }}
@@ -35,15 +35,13 @@ jobs:
       - name: Detect and Process Configuration Changes
         run: |
           mkdir changes
-          # Assuming the files in the source are standard YAML and need to be converted to ConfigMap format for the target
-          for file in $(find versions -name 'processing-agent-config.yml'); do
+          find versions -name 'processing-agent-config.yml' | while read file; do
             src_path="$GITHUB_WORKSPACE/$file"
             trg_path="$GITHUB_WORKSPACE/target-repo/$file"
             # Ensure the target file directory exists
             mkdir -p $(dirname "$trg_path")
             # Convert source YAML to ConfigMap format and compare with target
-            python3 ./.github/actions/scripts/process_values_to_cm.py "$src_path" "$trg_path"
-            if [ $? -eq 0 ]; then
+            if python3 ./.github/actions/scripts/process_values_to_cm.py "$src_path" "$trg_path"; then
               echo "$file has changes and needs to be updated."
               cp "$src_path" "$trg_path"
               echo "$file" >> changes/list.txt
