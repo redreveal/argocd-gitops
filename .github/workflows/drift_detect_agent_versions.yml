@@ -32,28 +32,36 @@ jobs:
           path: target-repo
           ref: ${{ github.event.inputs.target_branch }}
 
-      - name: Detect and Process Configuration Changes
+      - name: Compare Configuration Files
         run: |
-          mkdir changes
-          find versions -name 'processing-agent-config.yml' | while read src_file; do
-            src_path="$GITHUB_WORKSPACE/$src_file"
-            trg_path="${src_path/versions/processing-agent-config.yml/versions/values.yaml}"
-            echo "Processing source: $src_path"
-            echo "Targeting: $trg_path"
+          mkdir diffs
+          echo "Comparing configuration files..."
+          src_dir="$GITHUB_WORKSPACE/versions"
+          trg_dir="$GITHUB_WORKSPACE/target-repo/versions"
+          diff_output="diffs/difference_report.txt"
+
+          # Find all source configuration files
+          find $src_dir -name "processing-agent-config.yml" | while read src_file; do
+            # Construct the corresponding target file path
+            trg_file="${src_file/$src_dir/$trg_dir}"
+            trg_file="${trg_file/processing-agent-config.yml/values.yaml}"
             
-            mkdir -p $(dirname "$trg_path")
-            if [ ! -f "$trg_path" ]; then
-              echo "Target file $trg_path does not exist, creating a placeholder."
-              touch "$trg_path"  # Create an empty file
-            fi
-            
-            python3 ./.github/actions/scripts/process_values_to_cm.py "$src_path" "$trg_path"
-            if [ $? -eq 0 ]; then
-              echo "$src_file has changes and needs to be updated."
-              cp "$src_path" "$trg_path"
-              echo "$src_file" >> changes/list.txt
+            # Check if the target file exists
+            if [[ -f "$trg_file" ]]; then
+              # Perform a diff and append any differences to a report file
+              diff -q "$src_file" "$trg_file" >> $diff_output || echo "Difference found in $(basename $(dirname $trg_file))" >> $diff_output
+            else
+              echo "$trg_file does not exist" >> $diff_output
             fi
           done
+
+          # Output the differences
+          if [ -s $diff_output ]; then
+            echo "Differences detected:"
+            cat $diff_output
+          else
+            echo "No differences detected."
+          fi
 
 
 
