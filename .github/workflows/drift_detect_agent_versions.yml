@@ -57,12 +57,12 @@ jobs:
             fi
           done
           echo "changes_detected=$changes_detected" >> $GITHUB_ENV
-        shell: bash
+          echo "Changes detected status: $changes_detected"
 
   update-configurations:
     needs: sync-configurations
     runs-on: ubuntu-latest
-    if: ${{ needs.sync-configurations.outputs.changes_detected == 'true' }}
+    if: ${{ env.changes_detected == 'true' }}
     environment:
       name: production
       url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
