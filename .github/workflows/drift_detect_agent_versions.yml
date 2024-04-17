@@ -58,6 +58,10 @@ jobs:
           echo "::set-output name=changes_detected::$changes_detected"
         shell: bash
 
+      - name: Manual Review for Changes
+        if: steps.process_configs.outputs.changes_detected == 'true'
+        environment: production
+
       - name: Commit and Push Changes to Target Repository
         if: steps.process_configs.outputs.changes_detected == 'true'
         run: |
