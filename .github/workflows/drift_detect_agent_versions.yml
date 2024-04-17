@@ -46,16 +46,17 @@ jobs:
           changes_detected=false
           src_dir="$GITHUB_WORKSPACE/versions"
           trg_dir="$GITHUB_WORKSPACE/target-repo/versions"
+          echo "Checking for differences..."
           for src_file in $(find $src_dir -name "processing-agent-config.yml"); do
             trg_file="${src_file/$src_dir/$trg_dir}"
             trg_file="${trg_file/processing-agent-config.yml/values.yaml}"
             echo "Checking $src_file against $trg_file"
-            if ! python3 ./.github/actions/scripts/drift_detection_configs.py "$src_file" "$trg_file"; then
-              echo "Differences detected: $src_file -> $trg_file"
+            if python3 ./.github/actions/scripts/drift_detection_configs.py "$src_file" "$trg_file"; then
+              echo "Updating due to differences: $src_file -> $trg_file"
               changes_detected=true
             fi
           done
-          echo "::set-output name=changes_detected::$changes_detected"
+          echo "changes_detected=$changes_detected" >> $GITHUB_ENV
         shell: bash
 
   update-configurations:
@@ -100,16 +101,15 @@ jobs:
             trg_file="${src_file/$src_dir/$trg_dir}"
             trg_file="${trg_file/processing-agent-config.yml/values.yaml}"
             if python3 ./.github/actions/scripts/drift_detection_configs.py "$src_file" "$trg_file"; then
-              echo "Processing $src_file to $trg_file"
+              echo "Applying changes: $src_file -> $trg_file"
               python3 ./.github/actions/scripts/process_values_to_cm.py "$src_file" "$trg_file"
+              cd $GITHUB_WORKSPACE/target-repo
+              git config user.email "rberisha@revealdata.com"
+              git config user.name "Redon Berisha"
+              git add "$trg_file"
+              git commit -m "Updated configurations based on detected drifts"
+              git push
             fi
           done
-
-          cd $GITHUB_WORKSPACE/target-repo
-          git config user.email "rberisha@revealdata.com"
-          git config user.name "Redon Berisha"
-          git add versions/
-          git commit -m "Updated configurations based on changes in drift detection"
-          git push
         env:
           GIT_SSH_COMMAND: "ssh -i ~/.ssh/id_rsa"
