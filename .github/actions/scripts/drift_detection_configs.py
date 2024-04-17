@@ -1,23 +1,18 @@
 import yaml
 import sys
 
-
 def load_yaml_file(file_path):
     with open(file_path, 'r') as file:
         data = yaml.safe_load(file) or {}
     return data
 
-
 def extract_relevant_data(yaml_data):
-    # This function assumes the structure is known and consistent
-    # Adjust the key access based on actual structure variability and consistency
     relevant_data = {
         'defaultManagerVersion': yaml_data.get('defaultManagerVersion'),
         'defaultAgentVersion': yaml_data.get('defaultAgentVersion'),
         'msaVersionOverrides': yaml_data.get('msaVersionOverrides')
     }
     return relevant_data
-
 
 def compare_yaml_data(source_data, target_data):
     source_values = extract_relevant_data(source_data)
@@ -29,7 +24,6 @@ def compare_yaml_data(source_data, target_data):
             differences[key] = {'source': source_value, 'target': target_value}
     return differences
 
-
 if __name__ == "__main__":
     source_file = sys.argv[1]
     target_file = sys.argv[2]
@@ -38,10 +32,7 @@ if __name__ == "__main__":
     target_data = load_yaml_file(target_file)
 
     differences = compare_yaml_data(source_data, target_data)
-
     if differences:
-        print("Differences detected:")
-        for key, value in differences.items():
-            print(f"{key} - Source: {value['source']} | Target: {value['target']}")
+        print("DIFFERENCES_DETECTED", source_file, target_file)  # Print the file paths with differences
     else:
-        print("No differences in the specified configurations.")
+        print("NO_DIFFERENCES")
