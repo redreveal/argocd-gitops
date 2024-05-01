@@ -1,4 +1,4 @@
-name: Manual Sync Configuration
+name: Manual Drift Detection Agent Version
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ jobs:
   sync-configurations:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup SSH Key
+      - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.ARGOCD_GITOPS_VERSIONS_DEPLOYMENT_KEY }}" > ~/.ssh/id_rsa
@@ -43,7 +43,7 @@ jobs:
         run: |
           changes_detected=false
           src_dir="$GITHUB_WORKSPACE/versions"
-          trg_dir="$GITHUB_WORKSPACE/target-repo/versions"
+          trg_dir="$GITHUB_WORKSPACE/target-repo/processing/versions"
           for src_file in $(find $src_dir -name "processing-agent-config.yml"); do
             trg_file="${src_file/$src_dir/$trg_dir}"
             trg_file="${trg_file/processing-agent-config.yml/values.yaml}"

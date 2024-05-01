@@ -126,7 +126,7 @@ jobs:
             # Construct the relative path for the corresponding values.yaml
             RELATIVE_PATH="${FILE#versions/}"  # Strip the 'versions/' prefix
             RELATIVE_DIR=$(dirname "$RELATIVE_PATH")  # Get the directory path
-            VALUES_FILE_PATH="${{ github.workspace }}/argocd-gitops-versions/versions/$RELATIVE_DIR/values.yaml"
+            VALUES_FILE_PATH="${{ github.workspace }}/argocd-gitops-versions/processing/versions/$RELATIVE_DIR/values.yaml"
           
             if [ ! -f "$VALUES_FILE_PATH" ]; then
               echo "values.yaml does not exist at $VALUES_FILE_PATH, creating file."
