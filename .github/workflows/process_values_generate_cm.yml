@@ -145,9 +145,14 @@ jobs:
           cd ${{ github.workspace }}/argocd-gitops-versions
           git config user.email "rberisha@revealdata.com"
           git config user.name "Redon Berisha"
-          git add .
-          git commit -m "${{ needs.determine-environment.outputs.commit_message }}"
-          git push
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes detected, skipping commit and push."
+            exit 0
+          else
+            git add .
+            git commit -m "${{ needs.determine-environment.outputs.commit_message }}"
+            git push
+          fi
         env:
           GIT_SSH_COMMAND: "ssh -i ~/.ssh/id_rsa"
         shell: bash
@@ -236,9 +241,14 @@ jobs:
           cd ${{ github.workspace }}/argocd-gitops-versions
           git config user.email "rberisha@revealdata.com"
           git config user.name "Redon Berisha"
-          git add .
-          git commit -m "${{ needs.determine-environment.outputs.commit_message }}"
-          git push
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes detected, skipping commit and push."
+            exit 0
+          else
+            git add .
+            git commit -m "${{ needs.determine-environment.outputs.commit_message }}"
+            git push
+          fi
         env:
           GIT_SSH_COMMAND: "ssh -i ~/.ssh/id_rsa"
         shell: bash
