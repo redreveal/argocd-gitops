@@ -4,4 +4,4 @@ msaVersionOverrides:
    "41010001": "11.0.0.005"
    "41010002":
       agentVersion: "2024.3.0.429"
-      managerVersion: "10.2.2025.3"
+      managerVersion: "10.2.2025.4"
