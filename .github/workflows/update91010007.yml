@@ -71,14 +71,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 'set up ssh key for pushing 91010007 update'
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.ARGOCD_GITOPS_VERSIONS_DEPLOYMENT_KEY1 }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          git remote set-url origin git@github.com:${{ github.repository }}.git
-
       - name: 'Update version for MSA 91010007'
         env:
           FULL_VERSION: ${{ needs.build.outputs.full_version }}
@@ -99,5 +91,5 @@ jobs:
           git commit -m "Update 91010007 with version ${{ needs.build.outputs.full_version }}"
           git push
         env:
-          GIT_SSH_COMMAND: "ssh -i ~/.ssh/id_rsa"
+          GITHUB_TOKEN: ${{ github.token }}
         shell: bash
