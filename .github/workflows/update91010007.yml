@@ -1,0 +1,56 @@
+name: Update Version File with Random Number
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Generate Version
+    runs-on: ubuntu-latest
+    outputs:
+      full_version: ${{ steps.generate_version.outputs.full_version }}
+    steps:
+      - name: Generate Random Version
+        id: generate_version
+        run: |
+          RANDOM_VERSION="2024.$((RANDOM % 12 + 1)).$((RANDOM % 1000 + 1)).$((RANDOM % 1000 + 1))"
+          echo "Generated version: $RANDOM_VERSION"
+          echo "::set-output name=full_version::$RANDOM_VERSION"
+
+  updateMSA71010007:
+    name: Update Version for MSA 91010007
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install yq
+        run: |
+          curl -L https://github.com/mikefarah/yq/releases/download/v4.30.5/yq_linux_amd64 -o /usr/local/bin/yq
+          chmod +x /usr/local/bin/yq
+
+      - name: 'Update version for MSA 91010007'
+        env:
+          FULL_VERSION: '"${{ needs.build.outputs.full_version }}"'  # Ensure the value is quoted
+        run: |
+          yml_file="versions/dev/us-east-1/processing-agent-config.yml"
+
+          # Update the agentVersion and managerVersion for MSA 91010007 with quoted version
+          yq e '.msaVersionOverrides."91010007".agentVersion = strenv(FULL_VERSION)' -i "$yml_file"
+          yq e '.msaVersionOverrides."91010007".managerVersion = strenv(FULL_VERSION)' -i "$yml_file"
+
+      - name: Commit and Push Changes
+        run: |
+          git config --local user.email "sre-team@revealdata.com"
+          git config --local user.name "SRE team"
+          git add versions/dev/us-east-1/processing-agent-config.yml
+          git commit -m "Update 91010007 with version ${{ needs.build.outputs.full_version }}"
+          git push
+        env:
+          GIT_SSH_COMMAND: "ssh -i ~/.ssh/id_rsa"
+        shell: bash
