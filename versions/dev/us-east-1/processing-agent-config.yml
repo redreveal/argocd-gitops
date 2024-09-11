@@ -5,5 +5,5 @@ msaVersionOverrides:
   "92510003": "11.0.0.039"
   "92516257": "11.0.0.038"
   "91010007":
-    agentVersion: "2024.7.385.590"
-    managerVersion: "2024.7.385.590"
+    agentVersion: "2024.2.997.662"
+    managerVersion: "2024.2.997.662"
