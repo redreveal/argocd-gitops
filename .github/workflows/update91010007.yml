@@ -29,26 +29,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up SSH key for remote repo
+      - name: 'set up ssh key for pushing 91010007 update'
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.ARGOCD_GITOPS_VERSIONS_DEPLOYMENT_KEY1 }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan github.com >> ~/.ssh/known_hosts
-
-      - name: Update Git to use SSH
-        run: |
           git remote set-url origin git@github.com:${{ github.repository }}.git
-
-      - name: Install yq
-        run: |
-          curl -L https://github.com/mikefarah/yq/releases/download/v4.30.5/yq_linux_amd64 -o /usr/local/bin/yq
-          chmod +x /usr/local/bin/yq
 
       - name: 'Update version for MSA 91010007'
         env:
           FULL_VERSION: ${{ needs.build.outputs.full_version }}
         run: |
+          curl -L https://github.com/mikefarah/yq/releases/download/v4.30.5/yq_linux_amd64 -o /usr/local/bin/yq
+          chmod +x /usr/local/bin/yq
           yml_file="versions/dev/us-east-1/processing-agent-config.yml"
 
           # Update the agentVersion and managerVersion for MSA 91010007 with quoted version
