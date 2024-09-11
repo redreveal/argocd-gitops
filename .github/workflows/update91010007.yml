@@ -47,13 +47,13 @@ jobs:
 
       - name: 'Update version for MSA 91010007'
         env:
-          FULL_VERSION: '"${{ needs.build.outputs.full_version }}"'  # Ensure the value is quoted
+          FULL_VERSION: ${{ needs.build.outputs.full_version }}
         run: |
           yml_file="versions/dev/us-east-1/processing-agent-config.yml"
 
           # Update the agentVersion and managerVersion for MSA 91010007 with quoted version
-          yq e '.msaVersionOverrides."91010007".agentVersion = strenv(FULL_VERSION)' -i "$yml_file"
-          yq e '.msaVersionOverrides."91010007".managerVersion = strenv(FULL_VERSION)' -i "$yml_file"
+          yq e '.msaVersionOverrides."91010007".agentVersion = env(FULL_VERSION)' -i "$yml_file"
+          yq e '.msaVersionOverrides."91010007".managerVersion = env(FULL_VERSION)' -i "$yml_file"
 
       - name: Commit and Push Changes
         run: |
