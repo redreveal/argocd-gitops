@@ -50,7 +50,7 @@ jobs:
 
   deployLoadbox:
     name: deployLoadbox
-    needs: deployAPI
+    needs: build
     runs-on: ubuntu-latest
     outputs:
       full_version: ${{ steps.generate_version.outputs.full_version }}
