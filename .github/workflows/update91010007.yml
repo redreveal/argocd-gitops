@@ -70,6 +70,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          sparse-checkout: 'versions/dev/us-east-1/processing-agent-config.yml'
 
       - name: 'Update version for MSA 91010007'
         env:
@@ -89,7 +90,7 @@ jobs:
           git config --local user.name "SRE team"
           git add versions/dev/us-east-1/processing-agent-config.yml
           git commit -m "Update 91010007 with version ${{ needs.build.outputs.full_version }}"
-          git push
+          git push origin master
         env:
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
