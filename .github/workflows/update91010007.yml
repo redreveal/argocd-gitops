@@ -18,11 +18,24 @@ jobs:
         run: |
           RANDOM_VERSION="2024.$((RANDOM % 12 + 1)).$((RANDOM % 1000 + 1)).$((RANDOM % 1000 + 1))"
           echo "Generated version: $RANDOM_VERSION"
+          echo "::set-output name=full_version::$RANDOM_VERSION"  
+
+  destroy:
+    name: Generate Version
+    runs-on: ubuntu-latest
+    outputs:
+      full_version: ${{ steps.generate_version.outputs.full_version }}
+    steps:
+      - name: Generate Random Version
+        id: generate_version
+        run: |
+          RANDOM_VERSION="2024.$((RANDOM % 12 + 1)).$((RANDOM % 1000 + 1)).$((RANDOM % 1000 + 1))"
+          echo "Generated version: $RANDOM_VERSION"
           echo "::set-output name=full_version::$RANDOM_VERSION"
 
   updateMSA71010007:
     name: Update Version for MSA 91010007
-    needs: build
+    needs: destroy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
