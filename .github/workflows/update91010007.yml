@@ -67,7 +67,7 @@ jobs:
     needs: [deployLoadbox, build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           sparse-checkout: 'versions/dev/us-east-1/processing-agent-config.yml'
@@ -91,7 +91,7 @@ jobs:
           git config --local user.name "SRE team"
           git add versions/dev/us-east-1/processing-agent-config.yml
           git commit -m "Update 91010007 with version ${{ needs.build.outputs.full_version }}"
-          git push origin main
+          git push origin HEAD
         env:
           GITHUB_TOKEN: ${{ secrets.argocd_pat }}
         shell: bash
