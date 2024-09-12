@@ -93,5 +93,5 @@ jobs:
           git commit -m "Update 91010007 with version ${{ needs.build.outputs.full_version }}"
           git push origin main
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.argocd_pat }}
         shell: bash
