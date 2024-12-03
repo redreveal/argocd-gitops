@@ -9,3 +9,4 @@ msaVersionOverrides:
     agentVersion: "2024.3.112.454"
     managerVersion: "2024.3.112.454"
     databaseVersion: "11.0.0.039"
+  "1001": "1.0.0"
