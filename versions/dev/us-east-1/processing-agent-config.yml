@@ -11,3 +11,4 @@ msaVersionOverrides:
     databaseVersion: "11.0.0.039"
   "1001":
     databaseVersion: "1.0.0"
+  "1002": "1.0.0"
